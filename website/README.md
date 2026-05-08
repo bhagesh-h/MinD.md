@@ -7,8 +7,10 @@ This is the landing page for MinD.md, built with React, Vite, and Tailwind CSS.
 You can easily host this landing page for free using GitHub Pages. The recommended way to deploy a Vite application to GitHub Pages is using GitHub Actions.
 
 ### Step 1: Push your code to GitHub
+
 1. Create a new repository on GitHub.
 2. Initialize and push your code to the remote repository:
+
 ```bash
 git init
 git add .
@@ -19,10 +21,12 @@ git push -u origin main
 ```
 
 ### Step 2: Configure Vite Base URL (Optional)
+
 If you are deploying to `https://<USERNAME>.github.io/<REPO>/` (a project site), you need to set the `base` path in `vite.config.ts`.
 If you are deploying to `https://<USERNAME>.github.io/` (a user site), you can skip this step.
 
 Open `vite.config.ts` and add the `base` property:
+
 ```typescript
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
@@ -33,9 +37,11 @@ export default defineConfig({
   base: '/your-repo-name/', // Add this line
 })
 ```
+
 Commit and push this change to your repository.
 
 ### Step 3: Setup GitHub Actions
+
 1. In your GitHub repository, go to **Settings** > **Pages**.
 2. Under "Build and deployment", set the **Source** to **GitHub Actions**.
 3. Create a new file in your project at `.github/workflows/deploy.yml` and add the following content:
@@ -89,7 +95,9 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 ```
+
 4. Commit and push this file to your repository.
 
 ### Step 4: Access your site
+
 Once the GitHub Action completes successfully, your site will be live! You can find the URL in the Actions tab or under **Settings** > **Pages** in your repository.

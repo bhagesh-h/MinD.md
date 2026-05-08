@@ -47,6 +47,13 @@ MinD.md is a local-first markdown power tool, equipped with an extensive feature
 - **PDF Export**: Generate well-formatted PDF files directly from the rendered markdown.
 - **DOC Export**: Save notes into formats accessible by word processors.
 
+## Screenshot
+
+![About](./website/public/About.png)
+![Home](./website/public/Home.png)
+![Settings](./website/public/Settings.png)
+![Examples](./website/public/Examples.png)
+
 ## Getting Started
 
 ### Installation
@@ -109,7 +116,3 @@ Once the build completes successfully, you will find your executables in the `re
 - Fuse.js
 - PrismJS
 - html2pdf.js
-
-## License
-
-Provided under the MIT License.
