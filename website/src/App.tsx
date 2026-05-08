@@ -239,11 +239,11 @@ export default function App() {
       <footer className="border-t border-outline-variant bg-surface-container-lowest py-8 px-6 lg:px-xl mt-auto">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2">
-            <span className="font-mono-ui text-mono-ui text-on-surface-variant">© 2026 MinD.md Studio.</span>
+            <span className="font-mono-ui text-mono-ui text-on-surface-variant">© 2026 Created By Bhagesh</span>
           </div>
           <div className="flex gap-6 font-label-sm text-sm text-on-surface-variant">
-            <a className="hover:text-on-surface transition-colors" href="https://github.com/bhagesh-h" target="_blank" rel="noopener noreferrer">GitHub@bhagesh-h</a>
-            <a className="hover:text-on-surface transition-colors" href="https://www.linkedin.com/in/bhagesh-hunakunti/" target="_blank" rel="noopener noreferrer">LinkedIn@bhagesh-hunakunti</a>
+            <a className="hover:text-on-surface transition-colors" href="https://github.com/bhagesh-h" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <a className="hover:text-on-surface transition-colors" href="https://www.linkedin.com/in/bhagesh-hunakunti/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
           </div>
           <div className="flex gap-6 font-mono-ui text-sm text-on-surface-variant">
             <div className="flex items-center gap-2">
