@@ -242,13 +242,13 @@ export default function App() {
             <span className="font-mono-ui text-mono-ui text-on-surface-variant">© 2026 MinD.md Studio.</span>
           </div>
           <div className="flex gap-6 font-label-sm text-sm text-on-surface-variant">
-            <a className="hover:text-on-surface transition-colors" href="https://github.com/bhagesh-h" target="_blank" rel="noopener noreferrer">GitHub</a>
-            <a className="hover:text-on-surface transition-colors" href="https://www.linkedin.com/in/bhagesh-hunakunti/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+            <a className="hover:text-on-surface transition-colors" href="https://github.com/bhagesh-h" target="_blank" rel="noopener noreferrer">GitHub@bhagesh-h</a>
+            <a className="hover:text-on-surface transition-colors" href="https://www.linkedin.com/in/bhagesh-hunakunti/" target="_blank" rel="noopener noreferrer">LinkedIn@bhagesh-hunakunti</a>
           </div>
           <div className="flex gap-6 font-mono-ui text-sm text-on-surface-variant">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-tertiary-fixed-dim animate-pulse"></span>
-              CONNECTED TO LOCAL DAEMON
+              Stable Build
             </div>
           </div>
         </div>
