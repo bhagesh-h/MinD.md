@@ -74,9 +74,14 @@ export default function App() {
         </div>
         <div className="flex items-center gap-4 md:gap-8">
           <a className="font-mono-ui text-base font-semibold text-on-surface-variant hover:text-on-surface hidden md:block" href="https://github.com/bhagesh-h/MinD.md">GitHub</a>
-          <button className="bg-primary text-background font-mono-ui font-bold text-sm md:text-base px-3 md:px-6 py-2 md:py-2.5 rounded hover:brightness-110 transition-all flex items-center gap-1 md:gap-2">
-            <Download className="w-4 h-4 md:w-5 md:h-5" /> <span className="hidden sm:inline" href="https://github.com/bhagesh-h/MinD.md/releases/tag/0.0.1">Download</span>
-          </button>
+          <a
+            className="bg-primary text-background font-mono-ui font-bold text-sm md:text-base px-3 md:px-6 py-2 md:py-2.5 rounded hover:brightness-110 transition-all flex items-center gap-1 md:gap-2"
+            href="https://github.com/bhagesh-h/MinD.md/releases/tag/0.0.1"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Download className="w-4 h-4 md:w-5 md:h-5" /> <span className="hidden sm:inline">Download</span>
+          </a>
         </div>
       </nav>
 
@@ -97,18 +102,27 @@ export default function App() {
             MinD.md is a local-first markdown power tool, equipped with an extensive feature set designed to provide writing flow with zero distractions. Built for performance and privacy.
           </p>
           <div className="flex flex-col sm:flex-row gap-md w-full justify-center">
-            <button className="bg-primary text-background font-h2 font-semibold text-h2 px-lg py-sm rounded-DEFAULT hover:brightness-110 transition-all flex items-center justify-center gap-sm" href="https://github.com/bhagesh-h/MinD.md/releases/download/0.0.1/MinD.md_win64_0.0.1.exe">
+            <a
+              className="bg-primary text-background font-h2 font-semibold text-h2 px-lg py-sm rounded-DEFAULT hover:brightness-110 transition-all flex items-center justify-center gap-sm"
+              href="https://github.com/bhagesh-h/MinD.md/releases/download/0.0.1/MinD.md_win64_0.0.1.exe"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               Get 🧠.md for Windows
               <ArrowRight className="w-5 h-5" />
-            </button>
-            <button className="bg-transparent border border-outline-variant text-on-background font-h2 text-h2 px-lg py-sm rounded-DEFAULT hover:bg-surface-container-low transition-all" href="https://github.com/bhagesh-h/MinD.md/blob/main/README.md">
+            </a>
+            <a
+              className="bg-transparent border border-outline-variant text-on-background font-h2 text-h2 px-lg py-sm rounded-DEFAULT hover:bg-surface-container-low transition-all flex items-center justify-center"
+              href="https://github.com/bhagesh-h/MinD.md/blob/main/README.md"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               For Other OS Support - View Documentation
-            </button>
+            </a>
           </div>
 
           {/* Overlapping Mockups */}
           <div className="mt-24 relative w-full max-w-5xl mx-auto drop-shadow-2xl aspect-[1.55]">
-
             {/* Settings */}
             <div className="absolute top-0 left-[50%] w-[90%] md:w-full aspect-[1.55] bg-background border border-outline-variant rounded-xl shadow-2xl overflow-hidden animate-deck-shuffle" style={{ animationDelay: '-4s' }}>
               <ScaleWrapper width={1240} height={800}><SettingsView /></ScaleWrapper>
