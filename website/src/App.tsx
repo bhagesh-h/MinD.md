@@ -86,7 +86,7 @@ export default function App() {
           <a className="font-mono-ui text-base font-semibold text-on-surface-variant hover:text-on-surface hidden md:block" href="https://github.com/bhagesh-h/MinD.md">GitHub</a>
           <a
             className="bg-primary text-background font-mono-ui font-bold text-sm md:text-base px-3 md:px-6 py-2 md:py-2.5 rounded hover:brightness-110 transition-all flex items-center gap-1 md:gap-2"
-            href="https://github.com/bhagesh-h/MinD.md/releases/tag/0.0.1"
+            href="https://github.com/bhagesh-h/MinD.md/releases/tag/app-v0.1.0"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -102,7 +102,7 @@ export default function App() {
 
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container border border-outline-variant text-primary mb-8 font-mono-ui text-xs">
             <span className="w-2 h-2 rounded-full bg-tertiary-fixed"></span>
-            Build: 0.0.1-preview
+            Build: v0.1.0
           </div>
 
           <h1 className="font-h1 text-4xl md:text-6xl lg:text-7xl font-black text-on-background tracking-tight mb-md leading-tight">
@@ -114,7 +114,7 @@ export default function App() {
           <div className="flex flex-col sm:flex-row gap-md w-full justify-center">
             <a
               className="bg-primary text-background font-h2 font-semibold text-h2 px-lg py-sm rounded-DEFAULT hover:brightness-110 transition-all flex items-center justify-center gap-sm"
-              href="https://github.com/bhagesh-h/MinD.md/releases/download/0.0.1/MinD.md_win64_0.0.1.exe"
+              href="https://github.com/bhagesh-h/MinD.md/releases/download/app-v0.1.0/MinD_0.1.0_x64-setup.exe"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -123,11 +123,11 @@ export default function App() {
             </a>
             <a
               className="bg-transparent border border-outline-variant text-on-background font-h2 text-h2 px-lg py-sm rounded-DEFAULT hover:bg-surface-container-low transition-all flex items-center justify-center"
-              href="https://github.com/bhagesh-h/MinD.md/blob/main/README.md"
+              href="https://github.com/bhagesh-h/MinD.md/releases/tag/app-v0.1.0"
               target="_blank"
               rel="noopener noreferrer"
             >
-              For Other OS Support - View Documentation
+              For Other OS Support - Check Here
             </a>
           </div>
 
