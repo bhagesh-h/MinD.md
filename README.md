@@ -47,13 +47,6 @@ MinD.md is a local-first markdown power tool, equipped with an extensive feature
 - **PDF Export**: Generate well-formatted PDF files directly from the rendered markdown.
 - **DOC Export**: Save notes into formats accessible by word processors.
 
-## Screenshot
-
-![About](./website/public/About.png)
-![Home](./website/public/Home.png)
-![Settings](./website/public/Settings.png)
-![Examples](./website/public/Examples.png)
-
 ## Getting Started
 
 ### Installation
@@ -106,7 +99,7 @@ Docker can be used to build binaries in an isolated environment. Our provided Do
 docker build -t mind .
 ```
 
-2. Run the build inside the container, isolating the node modules. Use the command corresponding to your target operating system:
+1. Run the build inside the container, isolating the node modules. Use the command corresponding to your target operating system:
 
 **For Linux (.AppImage, .deb):**
 
@@ -136,11 +129,14 @@ Once the build completes successfully, you will find your compiled native execut
 We have configured an automated GitHub Actions workflow (`.github/workflows/release.yml`) that builds native installers for **Windows**, **macOS (Intel & Apple Silicon)**, and **Linux** entirely in the cloud.
 
 To trigger the automated build:
+
 1. Commit all your changes and push them to your repository.
 2. Tag your release with a version number (e.g., `v1.0.0`) and push the tag:
+
    ```bash
    git tag v1.0.0
    git push origin v1.0.0
    ```
+
 3. Navigate to the **Actions** tab on your GitHub repository to watch the builders compile your app.
 4. Once finished, a new "Release" will be automatically drafted on your GitHub page containing the `.exe`, `.dmg`, and `.AppImage` files ready for download.
