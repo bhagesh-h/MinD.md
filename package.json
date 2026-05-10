@@ -5,35 +5,30 @@
   "description": "MinD.md is a local-first markdown power tool, equipped with an extensive feature set designed to provide writing flow with zero distractions. Built for performance and privacy.",
   "author": "Bhagesh H",
   "type": "module",
-  "main": "electron/main.cjs",
   "scripts": {
-    "dev": "vite --port=3000 --host=0.0.0.0",
-    "dev:desktop": "concurrently \"vite --port=3000\" \"wait-on http://localhost:3000 && electron .\"",
-    "build:desktop": "vite build && electron-builder",
-    "build:mac": "vite build && electron-builder --mac",
-    "build:win": "vite build && electron-builder --win",
-    "build:linux": "vite build && electron-builder --linux",
+    "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "tauri": "tauri"
   },
   "dependencies": {
-    "@google/genai": "^1.29.0",
     "@tailwindcss/typography": "^0.5.19",
     "@tailwindcss/vite": "^4.1.14",
+    "@tauri-apps/api": "^2.11.0",
+    "@tauri-apps/plugin-dialog": "~2.7.0",
+    "@tauri-apps/plugin-fs": "~2.5.0",
+    "@tauri-apps/plugin-shell": "^2.3.5",
     "@types/lodash": "^4.17.24",
     "@types/react-syntax-highlighter": "^15.5.13",
     "@types/uuid": "^10.0.0",
     "@vitejs/plugin-react": "^5.0.4",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
-    "dotenv": "^17.2.3",
-    "express": "^4.21.2",
     "file-saver": "^2.0.5",
     "fuse.js": "^7.3.0",
     "html-to-image": "^1.11.13",
-    "html2pdf.js": "^0.14.0",
     "katex": "^0.16.45",
     "lodash": "^4.18.1",
     "lucide-react": "^0.546.0",
@@ -68,46 +63,12 @@
     "vite": "^6.2.3"
   },
   "devDependencies": {
-    "@types/express": "^4.17.21",
-    "@types/node": "^22.14.0",
+    "@tauri-apps/cli": "^2.11.1",
     "@types/prismjs": "^1.26.6",
     "autoprefixer": "^10.4.21",
-    "concurrently": "^9.2.1",
-    "electron": "^42.0.0",
-    "electron-builder": "^26.8.1",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
-    "vite": "^6.2.3",
-    "wait-on": "^9.0.5"
-  },
-  "build": {
-    "appId": "com.mindmd.app",
-    "productName": "MinD.md",
-    "directories": {
-      "output": "release",
-      "buildResources": "build"
-    },
-    "files": [
-      "dist/**/*",
-      "electron/**/*",
-      "public/**/*"
-    ],
-    "mac": {
-      "category": "public.app-category.productivity",
-      "icon": "build/icon.png"
-    },
-    "win": {
-      "target": "nsis",
-      "icon": "build/icon.ico"
-    },
-    "linux": {
-      "target": "AppImage",
-      "icon": "build/icon.png"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true
-    }
+    "vite": "^6.2.3"
   }
 }

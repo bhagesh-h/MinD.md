@@ -19,11 +19,25 @@ interface EditorProps {
 export const Editor: React.FC<EditorProps> = ({ note, notes, onUpdate, onSelectNote }) => {
   const [viewMode, setViewMode] = useState<'edit' | 'preview' | 'split'>('split');
   const [isExporting, setIsExporting] = useState(false);
-  const [selectedFormat, setSelectedFormat] = useState<'md' | 'txt' | 'html' | 'pdf' | 'doc'>('md');
+  const [selectedFormat, setSelectedFormat] = useState<'md' | 'txt' | 'html' | 'doc'>('md');
   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
   const exportDropdownRef = useRef<HTMLDivElement>(null);
   const [cursorInfo, setCursorInfo] = useState({ line: 1, col: 1, selChars: 0, selWords: 0 });
   const appearance = useAppearance(); // Trigger re-render on appearance update
+
+  // Local state to prevent expensive app-wide re-renders and markdown parsing on every keystroke
+  const [localContent, setLocalContent] = useState(note?.content || '');
+  const debounceRef = useRef<NodeJS.Timeout>();
+
+  // Sync local content when a DIFFERENT note is selected
+  useEffect(() => {
+    if (note) {
+      setLocalContent(note.content);
+    }
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [note?.id]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -59,13 +73,18 @@ export const Editor: React.FC<EditorProps> = ({ note, notes, onUpdate, onSelectN
     setCursorInfo({ line, col, selChars, selWords });
   };
 
+  // Use a ref for handleExport so the window event listener always calls the latest version
+  // without needing to re-register (avoids stale closure over localContent)
+  const handleExportRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    handleExportRef.current = handleExport;
+  });
+
   React.useEffect(() => {
-    const handleExportEvent = () => {
-      handleExport();
-    };
+    const handleExportEvent = () => handleExportRef.current();
     window.addEventListener('export-active-note', handleExportEvent);
     return () => window.removeEventListener('export-active-note', handleExportEvent);
-  }, [note, selectedFormat]); // Dependencies needed inside handleExport
+  }, []);
 
   if (!note) {
     return (
@@ -225,18 +244,39 @@ export const Editor: React.FC<EditorProps> = ({ note, notes, onUpdate, onSelectN
   const handleExport = async () => {
     if (!note) return;
     setIsExporting(true);
+
+    // Flush any pending debounce so we always export the latest content
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = undefined;
+    }
+    if (localContent !== note.content) {
+      onUpdate(note.id, { content: localContent });
+    }
+    const contentToExport = localContent;
+
     try {
       const filename = `${note.title.replace(/\s+/g, '-').toLowerCase()}`;
       
       switch (selectedFormat) {
         case 'md': {
-          const blob = new Blob([note.content], { type: 'text/markdown;charset=utf-8' });
-          saveAs(blob, `${filename}.md`);
+          const { save } = await import('@tauri-apps/plugin-dialog');
+          const { writeTextFile } = await import('@tauri-apps/plugin-fs');
+          const filePath = await save({ defaultPath: `${filename}.md`, filters: [{ name: 'Markdown', extensions: ['md'] }] });
+          if (filePath) {
+            await writeTextFile(filePath, contentToExport);
+            toast.success('Exported Markdown successfully');
+          }
           break;
         }
         case 'txt': {
-          const blob = new Blob([note.content], { type: 'text/plain;charset=utf-8' });
-          saveAs(blob, `${filename}.txt`);
+          const { save } = await import('@tauri-apps/plugin-dialog');
+          const { writeTextFile } = await import('@tauri-apps/plugin-fs');
+          const filePath = await save({ defaultPath: `${filename}.txt`, filters: [{ name: 'Text Document', extensions: ['txt'] }] });
+          if (filePath) {
+            await writeTextFile(filePath, contentToExport);
+            toast.success('Exported Text successfully');
+          }
           break;
         }
         case 'html': {
@@ -300,120 +340,17 @@ export const Editor: React.FC<EditorProps> = ({ note, notes, onUpdate, onSelectN
             </body>
             </html>
           `;
-          const blob = new Blob([docHtml], { type: 'text/html;charset=utf-8' });
-          saveAs(blob, `${filename}.html`);
+          
+          const { save } = await import('@tauri-apps/plugin-dialog');
+          const { writeTextFile } = await import('@tauri-apps/plugin-fs');
+          const filePath = await save({ defaultPath: `${filename}.html`, filters: [{ name: 'HTML Document', extensions: ['html'] }] });
+          if (filePath) {
+            await writeTextFile(filePath, docHtml);
+            toast.success('Exported HTML successfully');
+          }
           break;
         }
-        case 'pdf': {
-          const { default: html2pdf } = await import('html2pdf.js');
-          const clone = await getProcessedPreviewHtml();
-          
-          // Strip tailwind color classes that might compute to oklab/oklch
-          const contentHtml = clone.innerHTML.replace(/\s+class="([^"]*)"/g, (match, classNames) => {
-            const keep = classNames.split(' ').filter((c: string) => 
-              c.includes('callout') || 
-              c.includes('mermaid') || 
-              c.includes('highlight') || 
-              c.includes('task-list') || 
-              c.startsWith('language-')
-            ).join(' ');
-            return keep ? ` class="${keep}"` : '';
-          });
 
-          const calloutStyles = appearance?.callouts ? Object.entries(appearance.callouts).map(([type, props]: [string, any]) => `
-            #pdf-export-container .callout-${type} { border-left-color: ${props.border} !important; background-color: ${props.background} !important; color: ${props.text} !important; }
-            #pdf-export-container .callout-${type} .callout-title-container { color: ${props.border} !important; }
-            #pdf-export-container .callout-${type} .callout-icon { background-color: ${props.border} !important; }
-          `).join('') : `
-            #pdf-export-container .callout-note, #pdf-export-container .callout-info { border-left-color: #447099 !important; background-color: #f0f7fb !important; color: #000 !important; }
-            #pdf-export-container .callout-note .callout-title-container, #pdf-export-container .callout-info .callout-title-container { color: #447099 !important; }
-            #pdf-export-container .callout-note .callout-icon, #pdf-export-container .callout-info .callout-icon { background-color: #447099 !important; }
-            #pdf-export-container .callout-tip { border-left-color: #027a38 !important; background-color: #eefaef !important; color: #000 !important; }
-            #pdf-export-container .callout-tip .callout-title-container { color: #027a38 !important; }
-            #pdf-export-container .callout-tip .callout-icon { background-color: #027a38 !important; }
-            #pdf-export-container .callout-warning { border-left-color: #d9971c !important; background-color: #fff9ed !important; color: #000 !important; }
-            #pdf-export-container .callout-warning .callout-title-container { color: #d9971c !important; }
-            #pdf-export-container .callout-warning .callout-icon { background-color: #d9971c !important; }
-            #pdf-export-container .callout-caution { border-left-color: #cc5500 !important; background-color: #fff5f0 !important; color: #000 !important; }
-            #pdf-export-container .callout-caution .callout-title-container { color: #cc5500 !important; }
-            #pdf-export-container .callout-caution .callout-icon { background-color: #cc5500 !important; }
-            #pdf-export-container .callout-important { border-left-color: #cc0000 !important; background-color: #fcecec !important; color: #000 !important; }
-            #pdf-export-container .callout-important .callout-title-container { color: #cc0000 !important; }
-            #pdf-export-container .callout-important .callout-icon { background-color: #cc0000 !important; }
-          `;
-          
-          const docHtml = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <meta charset="utf-8">
-              <title>${note.title}</title>
-              <style>
-                #pdf-export-container, 
-                #pdf-export-container *, 
-                #pdf-export-container *::before, 
-                #pdf-export-container *::after {
-                  border-color: #e5e5e5;
-                  outline-color: transparent;
-                  text-decoration-color: transparent;
-                  box-shadow: none;
-                }
-                #pdf-export-container { font-family: -apple-system, system-ui, sans-serif; line-height: 1.6; padding: 40px; max-width: 800px; margin: 0 auto; color: #1a1a1a; background: #ffffff; }
-                #pdf-export-container h1 { color: #000; border-bottom: 2px solid #eee !important; padding-bottom: 10px; }
-                #pdf-export-container img, #pdf-export-container svg { max-width: 100%; border-radius: 8px; display: block; margin: 0 auto; }
-                #pdf-export-container pre { background: #f6f8fa; padding: 16px; border-radius: 8px; overflow-x: auto; font-family: monospace; white-space: pre-wrap; }
-                #pdf-export-container code { background: #f6f8fa; padding: 0.2em 0.4em; border-radius: 3px; font-family: monospace; color: #1e1e1e; font-size: 0.875em;}
-                #pdf-export-container blockquote { border-left: 4px solid #dfe2e5 !important; padding-left: 16px; color: #6a737d; margin: 0; }
-                #pdf-export-container table { border-collapse: collapse; width: 100%; margin: 20px 0; }
-                #pdf-export-container th, #pdf-export-container td { border: 1px solid #dfe2e5 !important; padding: 8px 12px; }
-                #pdf-export-container th { background: #f6f8fa; }
-                #pdf-export-container .metadata { color: #666; font-size: 0.9em; margin-bottom: 20px; text-align: left; }
-                #pdf-export-container .mermaid-outer-wrapper { display: flex; justify-content: center; width: 100%; margin: 20px 0; }
-                #pdf-export-container .mermaid-wrapper { display: flex; justify-content: center; width: 100%; }
-                #pdf-export-container mark.highlight { background-color: #fce788 !important; padding: 0 4px; border-radius: 4px; }
-                #pdf-export-container .callout { padding: 16px; margin: 20px 0; border-radius: 4px; border-left: 4px solid #ddd !important; background: #f9f9f9; display: block; overflow: hidden; }
-                #pdf-export-container .callout-header { display: flex; align-items: center; gap: 8px; padding-bottom: 8px; font-weight: bold; border-bottom: 1px solid rgba(0,0,0,0.05) !important; margin-bottom: 8px; }
-                #pdf-export-container .callout-icon { width: 16px; height: 16px; mask-size: contain; mask-repeat: no-repeat; mask-position: center; -webkit-mask-size: contain; -webkit-mask-repeat: no-repeat; -webkit-mask-position: center; }
-                #pdf-export-container .callout-note .callout-icon, #pdf-export-container .callout-info .callout-icon, #pdf-export-container .callout-tip .callout-icon, #pdf-export-container .callout-warning .callout-icon, #pdf-export-container .callout-caution .callout-icon, #pdf-export-container .callout-important .callout-icon { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cline x1='12' y1='16' x2='12' y2='12'/%3E%3Cline x1='12' y1='8' x2='12.01' y2='8'/%3E%3C/svg%3E"); }
-                ${calloutStyles}
-              </style>
-            </head>
-            <body>
-              <div id="pdf-export-container">
-                <h1>${note.title}</h1>
-                <div class="metadata">
-                  <p>Created: ${new Date(note.createdAt).toLocaleDateString()} | Tags: ${note.tags.join(', ')}</p>
-                </div>
-                <div class="content">${contentHtml}</div>
-              </div>
-            </body>
-            </html>
-          `;
-
-          const container = document.createElement('div');
-          container.id = 'pdf-export-wrapper';
-          container.style.position = 'absolute';
-          container.style.left = '-9999px';
-          container.style.width = '800px';
-          container.style.color = '#1a1a1a';
-          container.style.backgroundColor = '#ffffff';
-          container.innerHTML = docHtml;
-          document.body.appendChild(container); 
-
-          const opt = {
-            margin:       10,
-            filename:     `${filename}.pdf`,
-            image:        { type: 'jpeg' as const, quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true },
-            jsPDF:        { unit: 'mm' as const, format: 'a4', orientation: 'portrait' as const }
-          };
-
-          const element = (container.querySelector('#pdf-export-container') as HTMLElement) || container;
-          await html2pdf().set(opt).from(element).save();
-          
-          document.body.removeChild(container);
-          break;
-        }
         case 'doc': {
           const clone = await getProcessedPreviewHtml();
           const contentHtml = clone.innerHTML;
@@ -457,15 +394,21 @@ export const Editor: React.FC<EditorProps> = ({ note, notes, onUpdate, onSelectN
           const footer = "</body></html>";
           const sourceHTML = header + `<h1 style="text-align: center;">${note.title}</h1><div style="color: #666; margin-bottom: 20px; text-align: center;">Created: ${new Date(note.createdAt).toLocaleDateString()} | Tags: ${note.tags.join(', ')}</div><hr/>` + contentHtml + footer;
           
-          const blob = new Blob(['\ufeff', sourceHTML], {
-            type: 'application/msword'
-          });
-          saveAs(blob, `${filename}.doc`);
+          const { save } = await import('@tauri-apps/plugin-dialog');
+          const { writeTextFile } = await import('@tauri-apps/plugin-fs');
+          const filePath = await save({ defaultPath: `${filename}.doc`, filters: [{ name: 'Word Document', extensions: ['doc'] }] });
+          
+          if (filePath) {
+            // MS Word requires the BOM
+            await writeTextFile(filePath, '\ufeff' + sourceHTML);
+            toast.success('Exported DOC successfully');
+          }
           break;
         }
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error('Export failed:', e);
+      toast.error(`Export failed: ${e?.message || 'Unknown error'}`);
     } finally {
       setIsExporting(false);
     }
@@ -546,7 +489,7 @@ export const Editor: React.FC<EditorProps> = ({ note, notes, onUpdate, onSelectN
                 </button>
                 {isExportMenuOpen && (
                   <div className="absolute top-full left-0 mt-1 w-32 bg-[#1a1a1a] border border-[#262626] rounded-lg shadow-xl overflow-hidden z-50 py-1">
-                    {(['md', 'txt', 'html', 'pdf', 'doc'] as const).map(format => (
+                    {(['md', 'txt', 'html', 'doc'] as const).map(format => (
                       <button
                         key={format}
                         onClick={() => {
@@ -650,10 +593,27 @@ export const Editor: React.FC<EditorProps> = ({ note, notes, onUpdate, onSelectN
         {(viewMode === 'edit' || viewMode === 'split') && (
           <Panel defaultSize={viewMode === 'split' ? 50 : 100} minSize={20} className={cn("h-full", viewMode === 'split' && "")}>
             <textarea
-              value={note.content}
+              value={localContent}
               onChange={(e) => {
-                onUpdate(note.id, { content: e.target.value });
+                const newVal = e.target.value;
+                setLocalContent(newVal);
                 updateCursorInfo(e);
+                
+                if (debounceRef.current) {
+                  clearTimeout(debounceRef.current);
+                }
+                
+                // Debounce global state update (which triggers markdown render & localstorage save)
+                debounceRef.current = setTimeout(() => {
+                  onUpdate(note.id, { content: newVal });
+                }, 300);
+              }}
+              onBlur={() => {
+                // Ensure we save immediately if user clicks away
+                if (debounceRef.current) clearTimeout(debounceRef.current);
+                if (localContent !== note.content) {
+                  onUpdate(note.id, { content: localContent });
+                }
               }}
               onSelect={updateCursorInfo}
               onKeyUp={updateCursorInfo}
@@ -674,7 +634,7 @@ export const Editor: React.FC<EditorProps> = ({ note, notes, onUpdate, onSelectN
              <Suspense fallback={<LoadingView />}>
                 <MarkdownRenderer 
                   className="print-only-prose"
-                  content={note.content} 
+                  content={localContent}
                   notes={notes}
                   onNoteSelect={onSelectNote}
                   currentNoteId={note.id}
@@ -693,8 +653,8 @@ export const Editor: React.FC<EditorProps> = ({ note, notes, onUpdate, onSelectN
               </>
             ) : (
               <>
-                <span>Words: {note.content.split(/\s+/).filter(Boolean).length}</span>
-                <span>Chars: {note.content.length}</span>
+                <span>Words: {localContent.split(/\s+/).filter(Boolean).length}</span>
+                <span>Chars: {localContent.length}</span>
               </>
             )}
             <div className="w-px h-3 bg-[#262626] mx-1" />

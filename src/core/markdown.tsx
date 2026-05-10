@@ -9,7 +9,7 @@ import remarkFrontmatter from 'remark-frontmatter';
 import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { PrismAsync as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import 'katex/dist/katex.min.css';
 import { Mermaid } from '../components/Mermaid';
@@ -31,31 +31,37 @@ const autoLinkPlugin = (notes: Note[], currentNoteId?: string) => {
     .filter(n => n.id !== currentNoteId && n.title.trim().length > 2)
     .sort((a, b) => b.title.length - a.title.length);
 
+  // Pre-compute a single Regex for all notes instead of looping
+  const escapedTitles = sortedNotes.map(n => n.title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const combinedRegex = escapedTitles.length > 0 
+    ? new RegExp(`\\b(${escapedTitles.join('|')})\\b`, 'gi') 
+    : null;
+
   return (tree: any) => {
+    if (!combinedRegex) return;
+
     visit(tree, 'text', (node: any, index: number, parent: any) => {
       if (!parent || ['link', 'code', 'inlineCode'].includes(parent.type)) return;
 
       let value = node.value;
       const children: any[] = [];
       let lastIndex = 0;
-
-      // Find all occurrences of any note title
       const matches: { start: number; end: number; note: Note }[] = [];
+
+      let match;
+      combinedRegex.lastIndex = 0; // Reset state for global regex
       
-      sortedNotes.forEach(note => {
-        // Search globally with word boundaries
-        const regex = new RegExp(`\\b${note.title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
-        let match;
-        while ((match = regex.exec(value)) !== null) {
-          // Check if this match overlaps with an already found match
-          const start = match.index;
-          const end = match.index + match[0].length;
-          
-          if (!matches.some(m => (start >= m.start && start < m.end) || (end > m.start && end <= m.end))) {
-            matches.push({ start, end, note });
-          }
+      while ((match = combinedRegex.exec(value)) !== null) {
+        const start = match.index;
+        const end = match.index + match[0].length;
+        const matchedText = match[0].toLowerCase();
+        
+        const note = sortedNotes.find(n => n.title.toLowerCase() === matchedText);
+        
+        if (note && !matches.some(m => (start >= m.start && start < m.end) || (end > m.start && end <= m.end))) {
+          matches.push({ start, end, note });
         }
-      });
+      }
 
       // Sort matches by start index
       matches.sort((a, b) => a.start - b.start);

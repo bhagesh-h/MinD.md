@@ -72,47 +72,75 @@ Ensure that you have Node.js installed, then clone the repository and run:
 
 ### Building Desktop Executables (macOS, Windows, Linux)
 
-You can package MinD.md as a standalone desktop application for macOS, Windows, and Linux using **Electron**.
+MinD.md uses **Tauri** to create standalone, lightweight native desktop applications for macOS, Windows, and Linux.
 
 #### Prerequisites
 
-- Install [Node.js](https://nodejs.org/en)
+1. Install [Node.js](https://nodejs.org/en)
+2. Install [Rust](https://www.rust-lang.org/tools/install)
+3. For Linux only, you must also install the Tauri system dependencies (like webkit2gtk). See the [Tauri Prerequisites Guide](https://tauri.app/v1/guides/getting-started/prerequisites) for your specific Linux distribution.
 
 #### Development Desktop Mode
 
 To run the application in a desktop window during development:
 
 ```bash
-npm run dev:desktop
+npm run tauri dev
 ```
 
 #### Building the App
 
-To build the executable for your intended operating system, run one of the following commands:
+To build the executable natively for your operating system, run the following command:
 
 ```bash
-# For macOS (.app and .dmg)
-npm run build:mac
-
-# For Windows (executables)
-npm run build:win
-
-# For Linux (.AppImage)
-npm run build:linux
+npm run tauri build
 ```
 
-Once the build completes successfully, you will find your executables in the `release/` directory.
+##### Building with Docker (Cross-Compilation)
 
-> **Note:** Electron-builder compiles for the operating system it is running on by default. If you encounter issues compiling for a different OS, it's recommended to run the respective build command on that OS, or use GitHub Actions for cross-platform builds.
+Docker can be used to build binaries in an isolated environment. Our provided Dockerfile is fully configured for **Linux** and **Windows** builds out of the box (utilizing MinGW for Windows cross-compilation). Note that cross-compiling for macOS from a Linux Docker container requires proprietary Apple SDKs and is not supported by this container.
 
-## Technologies Used
+1. Build the baseline Docker image:
 
-- React 19
-- Vite
-- Tailwind CSS
-- React Markdown
-- Mermaid
-- KaTeX
-- Fuse.js
-- PrismJS
-- html2pdf.js
+```bash
+docker build -t mind .
+```
+
+2. Run the build inside the container, isolating the node modules. Use the command corresponding to your target operating system:
+
+**For Linux (.AppImage, .deb):**
+
+```bash
+docker run --rm -v "${PWD}:/app" -v /app/node_modules -e APPIMAGE_EXTRACT_AND_RUN=1 mind npm run tauri build -- --target x86_64-unknown-linux-gnu
+```
+
+**For Windows (.exe, .msi):**
+
+```bash
+docker run --rm -v "${PWD}:/app" -v /app/node_modules mind npm run tauri build -- --target x86_64-pc-windows-gnu
+```
+
+**For macOS (.app, .dmg):**
+*(Requires OSXCross and Apple SDKs; recommended to build natively on a Mac or via GitHub Actions)*
+
+```bash
+docker run --rm -v "${PWD}:/app" -v /app/node_modules mind npm run tauri build -- --target x86_64-apple-darwin
+```
+
+*(If using the older Windows Command Prompt `cmd.exe` instead of PowerShell, replace `${PWD}` with `%cd%`)*
+
+Once the build completes successfully, you will find your compiled native executables in the `src-tauri/target/release/bundle/` directory.
+
+##### Building with GitHub Actions (Automated Cloud Builds)
+
+We have configured an automated GitHub Actions workflow (`.github/workflows/release.yml`) that builds native installers for **Windows**, **macOS (Intel & Apple Silicon)**, and **Linux** entirely in the cloud.
+
+To trigger the automated build:
+1. Commit all your changes and push them to your repository.
+2. Tag your release with a version number (e.g., `v1.0.0`) and push the tag:
+   ```bash
+   git tag v1.0.0
+   git push origin v1.0.0
+   ```
+3. Navigate to the **Actions** tab on your GitHub repository to watch the builders compile your app.
+4. Once finished, a new "Release" will be automatically drafted on your GitHub page containing the `.exe`, `.dmg`, and `.AppImage` files ready for download.

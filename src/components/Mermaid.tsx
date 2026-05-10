@@ -1,8 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
-import mermaid from 'mermaid';
-import { useAppearance } from '../lib/appearance';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import { ZoomIn, ZoomOut, Maximize } from 'lucide-react';
+import { useAppearance } from '../lib/appearance';
+
+// Module-level mutex: ensures concurrent Mermaid renders are queued, not raced.
+// Racing calls to mermaid.initialize() corrupt internal state and crash the page.
+let renderQueue = Promise.resolve();
+const queueRender = (fn: () => Promise<void>) => {
+  renderQueue = renderQueue.then(fn).catch(() => {});
+};
+
 
 interface MermaidProps {
   chart: string;
@@ -15,62 +22,64 @@ export const Mermaid: React.FC<MermaidProps> = ({ chart }) => {
   const config = useAppearance();
 
   useEffect(() => {
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: 'base',
-      securityLevel: 'loose',
-      fontFamily: 'inherit',
-      themeVariables: {
-        fontFamily: config.charts?.font || '"Inter", sans-serif',
-        fontSize: '15px',
-        primaryColor: config.mermaid?.primaryColor || '#7dd3fc',
-        primaryTextColor: config.mermaid?.primaryTextColor || '#082f49',
-        primaryBorderColor: config.mermaid?.primaryBorderColor || '#38bdf8',
-        lineColor: config.mermaid?.lineColor || '#94a3b8',
-        secondaryColor: config.mermaid?.secondaryColor || '#fde047',
-        tertiaryColor: config.mermaid?.tertiaryColor || '#86efac',
-        mainBkg: config.mermaid?.mainBkg || 'transparent',
-        nodeBorder: config.mermaid?.nodeBorder || '#0ea5e9',
-        clusterBkg: config.mermaid?.clusterBkg || 'rgba(30, 41, 59, 0.5)',
-        clusterBorder: config.mermaid?.clusterBorder || '#475569',
-        titleColor: config.mermaid?.titleColor || '#e2e8f0',
-        edgeLabelBackground: config.mermaid?.edgeLabelBackground || '#0f172a',
-        nodeTextColor: config.mermaid?.nodeTextColor || '#0f172a',
-        labelTextColor: config.mermaid?.labelTextColor || '#f1f5f9',
-        pie1: config.charts?.pie?.[0] || '#7dd3fc',
-        pie2: config.charts?.pie?.[1] || '#fde047',
-        pie3: config.charts?.pie?.[2] || '#86efac',
-        pie4: config.charts?.pie?.[3] || '#fda4af',
-        pie5: config.charts?.pie?.[4] || '#d8b4fe',
-        pie6: config.charts?.pie?.[5] || '#fbbf24',
-        pie7: config.charts?.pie?.[6] || '#f472b6',
-        pie8: config.charts?.pie?.[7] || '#a78bfa',
-        pieTitleTextSize: '20px',
-        pieTitleTextColor: '#f8fafc',
-        pieSectionTextSize: '16px',
-        pieSectionTextColor: '#0f172a',
-        pieLegendTextSize: '15px',
-        pieLegendTextColor: '#cbd5e1',
-      },
-      flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis', nodeSpacing: 50, rankSpacing: 50 },
-      sequence: { 
-        useMaxWidth: false, 
-        showSequenceNumbers: true,
-        actorMargin: 100,
-        boxTextMargin: 10,
-        noteMargin: 15,
-        messageMargin: 45,
-        mirrorActors: true,
-      },
-      gantt: { useMaxWidth: false },
-      er: { useMaxWidth: false },
-    });
-
     let isMounted = true;
     const renderChart = async () => {
       if (!ref.current) return;
       
       try {
+        const { default: mermaid } = await import('mermaid');
+        
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: 'base',
+          securityLevel: 'loose',
+          fontFamily: 'inherit',
+          themeVariables: {
+            fontFamily: config.charts?.font || '"Inter", sans-serif',
+            fontSize: '15px',
+            primaryColor: config.mermaid?.primaryColor || '#7dd3fc',
+            primaryTextColor: config.mermaid?.primaryTextColor || '#082f49',
+            primaryBorderColor: config.mermaid?.primaryBorderColor || '#38bdf8',
+            lineColor: config.mermaid?.lineColor || '#94a3b8',
+            secondaryColor: config.mermaid?.secondaryColor || '#fde047',
+            tertiaryColor: config.mermaid?.tertiaryColor || '#86efac',
+            mainBkg: config.mermaid?.mainBkg || 'transparent',
+            nodeBorder: config.mermaid?.nodeBorder || '#0ea5e9',
+            clusterBkg: config.mermaid?.clusterBkg || 'rgba(30, 41, 59, 0.5)',
+            clusterBorder: config.mermaid?.clusterBorder || '#475569',
+            titleColor: config.mermaid?.titleColor || '#e2e8f0',
+            edgeLabelBackground: config.mermaid?.edgeLabelBackground || '#0f172a',
+            nodeTextColor: config.mermaid?.nodeTextColor || '#0f172a',
+            labelTextColor: config.mermaid?.labelTextColor || '#f1f5f9',
+            pie1: config.charts?.pie?.[0] || '#7dd3fc',
+            pie2: config.charts?.pie?.[1] || '#fde047',
+            pie3: config.charts?.pie?.[2] || '#86efac',
+            pie4: config.charts?.pie?.[3] || '#fda4af',
+            pie5: config.charts?.pie?.[4] || '#d8b4fe',
+            pie6: config.charts?.pie?.[5] || '#fbbf24',
+            pie7: config.charts?.pie?.[6] || '#f472b6',
+            pie8: config.charts?.pie?.[7] || '#a78bfa',
+            pieTitleTextSize: '20px',
+            pieTitleTextColor: '#f8fafc',
+            pieSectionTextSize: '16px',
+            pieSectionTextColor: '#0f172a',
+            pieLegendTextSize: '15px',
+            pieLegendTextColor: '#cbd5e1',
+          },
+          flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis', nodeSpacing: 50, rankSpacing: 50 },
+          sequence: { 
+            useMaxWidth: false, 
+            showSequenceNumbers: true,
+            actorMargin: 100,
+            boxTextMargin: 10,
+            noteMargin: 15,
+            messageMargin: 45,
+            mirrorActors: true,
+          },
+          gantt: { useMaxWidth: false },
+          er: { useMaxWidth: false },
+        });
+
         setError(null);
         const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`;
         // Clean up text to avoid rendering issues with newlines
@@ -88,7 +97,7 @@ export const Mermaid: React.FC<MermaidProps> = ({ chart }) => {
       }
     };
 
-    renderChart();
+    queueRender(() => renderChart());
     
     return () => {
       isMounted = false;

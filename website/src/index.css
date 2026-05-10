@@ -1,5 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
+/* Google Fonts are loaded non-blocking via <link> tags in index.html */
 @import "tailwindcss";
+
 
 @theme {
   --color-surface-container-lowest: #0e0e0e;
@@ -103,13 +104,21 @@
 @layer utilities {
   .animate-deck-shuffle {
     animation: deck-shuffle 16s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    /* Promote to its own GPU compositor layer to avoid paint thrashing */
+    will-change: transform;
+    backface-visibility: hidden;
   }
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
   .no-scrollbar {
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  /* Skip rendering below-fold sections until they're near the viewport */
+  .cv-auto {
+    content-visibility: auto;
+    contain-intrinsic-size: 0 600px;
   }
 }
 

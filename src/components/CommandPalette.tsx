@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Command, Search, FileText, Plus, Settings, Sparkles, Hash, Download } from 'lucide-react';
 import { Note } from '../types';
 import { cn } from '../lib/utils';
@@ -24,24 +24,23 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const appearance = useAppearance(); // Trigger re-render on appearance update
 
-  const fuse = new Fuse(notes, {
+  // Memoize Fuse instance - only rebuild when notes list changes, NOT on every keystroke
+  const fuse = useMemo(() => new Fuse(notes, {
     keys: ['title', 'content', 'tags'],
     threshold: 0.3,
-  });
+    includeScore: true,
+  }), [notes]);
 
-  let results: Note[] = [];
-  if (query) {
+  const results = useMemo(() => {
+    if (!query) return notes.slice(0, 5);
     if (query.startsWith('#')) {
       const tagQuery = query.slice(1).toLowerCase();
-      results = notes.filter(note =>
+      return notes.filter(note =>
         note.tags.some(tag => tag.toLowerCase().includes(tagQuery))
       );
-    } else {
-      results = fuse.search(query).map(r => r.item);
     }
-  } else {
-    results = notes.slice(0, 5);
-  }
+    return fuse.search(query).map(r => r.item);
+  }, [query, fuse, notes]);
 
   useEffect(() => {
     if (isOpen) {

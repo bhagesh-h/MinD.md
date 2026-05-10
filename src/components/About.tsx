@@ -36,7 +36,7 @@ export const About: React.FC = () => {
         { title: "Advanced Rendering", desc: "Support for GFM, tables, tasks, callouts, and clean HTML." },
         { title: "Diagrams & Math", desc: "Render Mermaid diagrams and LaTeX equations natively." },
         { title: "Syntax Highlighting", desc: "Beautiful real-time code highlighting via PrismJS." },
-        { title: "Flexible Export", desc: "Export to MD, TXT, HTML, PDF, and DOC formats." },
+        { title: "Flexible Export", desc: "Export to MD, TXT, HTML, and DOC formats." },
         { title: "GitHub Sync", desc: "Backup notes automatically with private remote repositories." },
         { title: "Versatile Editor", desc: "Seamlessly switch between split, edit, and preview modes." }
     ];

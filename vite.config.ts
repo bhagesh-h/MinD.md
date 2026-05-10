@@ -8,9 +8,6 @@ export default defineConfig(({mode}) => {
   return {
     base: './',
     plugins: [react(), tailwindcss()],
-    define: {
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
@@ -26,7 +23,11 @@ export default defineConfig(({mode}) => {
       rollupOptions: {
         output: {
           manualChunks: {
-            'html2pdf': ['html2pdf.js'],
+
+            'syntax-highlighter': [
+              'react-syntax-highlighter',
+            ],
+            'katex': ['katex'],
             'markdown': [
               'react-markdown', 
               'remark-parse', 
