@@ -4,7 +4,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MinD.md</title>
+  <title>MinD.md — Local-First Markdown Power Tool</title>
+  <meta name="description" content="MinD.md is a local-first markdown power tool with diagrams, math, GitHub sync, and zero distractions. Built for performance and privacy." />
+
+  <!-- Preconnect to Google Fonts origins so DNS/TLS is already resolved when CSS requests font files -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+  <!-- Non-blocking font load: media="print" trick loads async, onload switches to all -->
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap"
+    media="print"
+    onload="this.media='all'"
+  />
+  <!-- Fallback for browsers with JS disabled -->
+  <noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" />
+  </noscript>
 </head>
 
 <body>

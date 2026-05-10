@@ -560,7 +560,7 @@ export const AboutView = () => {
               {/* Feature Card 6 (Hovered with Tooltip) */}
               <div className="aspect-square bg-[#131415] border border-[#202020] rounded-2xl flex flex-col items-center justify-center gap-8 transition-colors cursor-default relative pt-4">
                 <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-[#e9d5ff] text-[#4c1d95] font-bold px-4 py-3 rounded w-[150%] text-center text-xs shadow-xl z-20 whitespace-nowrap">
-                  Export to MD, TXT, HTML, PDF, and DOC formats.
+                  Export to MD, TXT, HTML, and DOC formats.
                 </div>
                 <div className="w-16 h-12 bg-gradient-to-b from-[#d8b4fe] to-[#9333ea] rounded border border-white/10 shadow-[0_4px_20px_rgba(147,51,234,0.3)] opacity-40 relative mt-4">
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-2 bg-white/30 rounded-b"></div>
@@ -594,3 +594,47 @@ export const AboutView = () => {
     </div>
   );
 };
+
+import { useRef, useEffect, useState } from 'react';
+
+const ScaleWrapper = ({ children, width, height }: { children: React.ReactNode, width: number, height: number }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+  useEffect(() => {
+    let rafId: number;
+    const updateScale = () => {
+      if (containerRef.current) setScale(containerRef.current.clientWidth / width);
+    };
+    const onResize = () => { cancelAnimationFrame(rafId); rafId = requestAnimationFrame(updateScale); };
+    const observer = new ResizeObserver(onResize);
+    if (containerRef.current) observer.observe(containerRef.current);
+    updateScale();
+    return () => { observer.disconnect(); cancelAnimationFrame(rafId); };
+  }, [width]);
+  return (
+    <div ref={containerRef} className="w-full h-full relative overflow-hidden rounded-xl bg-[#0e0e0e]">
+      <div className="absolute top-0 left-0 origin-top-left" style={{ width: `${width}px`, height: `${height}px`, transform: `scale(${scale})` }}>
+        {children}
+      </div>
+    </div>
+  );
+};
+
+export default function MockupCarousel() {
+  return (
+    <>
+      <div className="absolute top-0 left-[50%] w-[90%] md:w-full aspect-[1.55] bg-background border border-outline-variant rounded-xl shadow-2xl overflow-hidden animate-deck-shuffle" style={{ animationDelay: '-4s' }}>
+        <ScaleWrapper width={1240} height={800}><SettingsView /></ScaleWrapper>
+      </div>
+      <div className="absolute top-0 left-[50%] w-[90%] md:w-full aspect-[1.55] bg-background border border-outline-variant rounded-xl shadow-2xl overflow-hidden animate-deck-shuffle" style={{ animationDelay: '-8s' }}>
+        <ScaleWrapper width={1240} height={800}><ExamplesView /></ScaleWrapper>
+      </div>
+      <div className="absolute top-0 left-[50%] w-[90%] md:w-full aspect-[1.55] bg-background border border-outline-variant rounded-xl shadow-2xl overflow-hidden animate-deck-shuffle" style={{ animationDelay: '-12s' }}>
+        <ScaleWrapper width={1240} height={800}><AboutView /></ScaleWrapper>
+      </div>
+      <div className="absolute top-0 left-[50%] w-[90%] md:w-full aspect-[1.55] bg-background border border-outline-variant rounded-xl shadow-2xl overflow-hidden animate-deck-shuffle" style={{ animationDelay: '0s' }}>
+        <ScaleWrapper width={1240} height={800}><HomeView /></ScaleWrapper>
+      </div>
+    </>
+  );
+}

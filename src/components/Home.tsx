@@ -45,6 +45,19 @@ export const Home: React.FC<HomeProps> = ({ notes, folders, onSelectNote, onSele
   const [confirmDeleteId, setConfirmDeleteId] = React.useState<string | null>(null);
   const appearance = useAppearance();
 
+  // Memoize file stats to avoid re-computing Blob sizes on every render
+  const noteStats = React.useMemo(() => {
+    const statsMap: Record<string, { size: string; wordCount: number; lineCount: number }> = {};
+    notes.forEach(note => {
+      statsMap[note.id] = {
+        size: (new Blob([note.content]).size / 1024).toFixed(1),
+        wordCount: note.content.split(/\s+/).filter(Boolean).length,
+        lineCount: note.content.split('\n').length,
+      };
+    });
+    return statsMap;
+  }, [notes]);
+
   return (
     <div className="flex-1 overflow-y-auto p-8 bg-[#0a0a0a] scrollbar-thin">
       {/* Folders Section */}
@@ -120,9 +133,7 @@ export const Home: React.FC<HomeProps> = ({ notes, folders, onSelectNote, onSele
           
           <div className="flex flex-col">
             {notes.slice(0, 10).map(note => {
-              const wordCount = note.content.split(/\s+/).filter(Boolean).length;
-              const lineCount = note.content.split('\n').length;
-              const size = (new Blob([note.content]).size / 1024).toFixed(1);
+              const stats = noteStats[note.id] || { size: '0.0', wordCount: 0, lineCount: 0 };
               return (
                 <div 
                   key={note.id}
@@ -179,7 +190,7 @@ export const Home: React.FC<HomeProps> = ({ notes, folders, onSelectNote, onSele
                     </div>
                   </div>
                   <div className="col-span-1 text-center text-[11px] text-white/60 group-hover:text-white">
-                    {size} KB
+                    {stats.size} KB
                   </div>
                   <div className="col-span-3 text-right text-xs text-white/60 flex items-center justify-end gap-3 group-hover:text-white">
                     {new Date(note.updatedAt).toLocaleDateString()}

@@ -41,7 +41,7 @@ export function useVault() {
         const welcomeNote: Note = {
           id: 'welcome',
           title: 'Welcome to MinD.md',
-          content: '# Welcome to MinD.md\n\nThis is your local-first markdown power tool.\n\n## Features\n- **GFM Support**: Tables, task lists, and more.\n- **Math**: $E=mc^2$\n- **Code**: Highlighting via Shiki/Prism.\n- **AI**: Integration with Gemini.\n\nStart by creating a new note in the sidebar.',
+          content: '# Welcome to MinD.md\n\nThis is your local-first markdown power tool.\n\n## Features\n- **GFM Support**: Tables, task lists, and more.\n- **Math**: $E=mc^2$\n- **Code**: Highlighting via Shiki/Prism.\n\nStart by creating a new note in the sidebar.',
           path: '/welcome.md',
           parentId: 'root',
           tags: ['onboarding'],
@@ -115,10 +115,15 @@ export function useVault() {
   }, []);
 
   useEffect(() => {
-    if (notes.length > 0) {
+    if (notes.length === 0) return;
+    
+    // Debounce the heavy JSON stringify and localStorage IO
+    const handler = setTimeout(() => {
       localStorage.setItem('MinD-md-notes', JSON.stringify(notes));
       localStorage.setItem('MinD-md-folders', JSON.stringify(folders));
-    }
+    }, 1000);
+    
+    return () => clearTimeout(handler);
   }, [notes, folders]);
 
   const activeNote = useMemo(() => notes.find(n => n.id === activeNoteId), [notes, activeNoteId]);

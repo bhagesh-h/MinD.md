@@ -1,7 +1,33 @@
 import React, { lazy, Suspense } from 'react';
-import { HelpCircle } from 'lucide-react';
+import { HelpCircle, AlertTriangle } from 'lucide-react';
 
 const MarkdownRenderer = lazy(() => import('../core/markdown').then(m => ({ default: m.MarkdownRenderer })));
+
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error: string }
+> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false, error: '' };
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error: error.message };
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex flex-col items-center justify-center h-full gap-4 text-center p-12">
+          <AlertTriangle size={32} className="text-yellow-500/60" />
+          <p className="text-white/40 text-sm">Preview failed to render.</p>
+          <p className="text-white/20 text-xs font-mono">{this.state.error}</p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 
 const HELP_CONTENT = `# Markdown Elements Guide
 
@@ -223,9 +249,11 @@ export const Help: React.FC = () => {
           />
         </div>
         <div className="flex-1 h-full overflow-y-auto bg-[#0a0a0a] p-8 pb-32 custom-scrollbar">
-          <Suspense fallback={<div className="animate-pulse flex space-x-4">Loading...</div>}>
-            <MarkdownRenderer content={HELP_CONTENT} />
-          </Suspense>
+          <ErrorBoundary>
+            <Suspense fallback={<div className="p-8 text-white/20 text-sm animate-pulse">Rendering preview...</div>}>
+              <MarkdownRenderer content={HELP_CONTENT} />
+            </Suspense>
+          </ErrorBoundary>
         </div>
       </div>
     </div>

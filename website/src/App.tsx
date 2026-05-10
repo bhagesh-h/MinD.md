@@ -1,5 +1,5 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { HomeView, SettingsView, ExamplesView, AboutView } from './components/MockupViews';
+import React, { useRef, useEffect, useState, lazy, Suspense } from 'react';
+const MockupViews = lazy(() => import('./components/MockupViews'));
 import {
   BookOpen,
   ArrowRight,
@@ -27,6 +27,7 @@ const ScaleWrapper = ({ children, width, height }: { children: React.ReactNode, 
   const [scale, setScale] = useState(1);
 
   useEffect(() => {
+    let rafId: number;
     const updateScale = () => {
       if (containerRef.current) {
         const containerWidth = containerRef.current.clientWidth;
@@ -34,11 +35,20 @@ const ScaleWrapper = ({ children, width, height }: { children: React.ReactNode, 
       }
     };
 
-    const observer = new ResizeObserver(updateScale);
+    // Debounce via requestAnimationFrame — batches resize events to one per frame
+    const onResize = () => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(updateScale);
+    };
+
+    const observer = new ResizeObserver(onResize);
     if (containerRef.current) observer.observe(containerRef.current);
     updateScale();
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(rafId);
+    };
   }, [width]);
 
   return (
@@ -121,32 +131,16 @@ export default function App() {
             </a>
           </div>
 
-          {/* Overlapping Mockups */}
+          {/* Overlapping Mockups - lazy loaded since it's the heaviest component */}
           <div className="mt-24 relative w-full max-w-5xl mx-auto drop-shadow-2xl aspect-[1.55]">
-            {/* Settings */}
-            <div className="absolute top-0 left-[50%] w-[90%] md:w-full aspect-[1.55] bg-background border border-outline-variant rounded-xl shadow-2xl overflow-hidden animate-deck-shuffle" style={{ animationDelay: '-4s' }}>
-              <ScaleWrapper width={1240} height={800}><SettingsView /></ScaleWrapper>
-            </div>
-
-            {/* Examples */}
-            <div className="absolute top-0 left-[50%] w-[90%] md:w-full aspect-[1.55] bg-background border border-outline-variant rounded-xl shadow-2xl overflow-hidden animate-deck-shuffle" style={{ animationDelay: '-8s' }}>
-              <ScaleWrapper width={1240} height={800}><ExamplesView /></ScaleWrapper>
-            </div>
-
-            {/* About */}
-            <div className="absolute top-0 left-[50%] w-[90%] md:w-full aspect-[1.55] bg-background border border-outline-variant rounded-xl shadow-2xl overflow-hidden animate-deck-shuffle" style={{ animationDelay: '-12s' }}>
-              <ScaleWrapper width={1240} height={800}><AboutView /></ScaleWrapper>
-            </div>
-
-            {/* Home */}
-            <div className="absolute top-0 left-[50%] w-[90%] md:w-full aspect-[1.55] bg-background border border-outline-variant rounded-xl shadow-2xl overflow-hidden animate-deck-shuffle" style={{ animationDelay: '0s' }}>
-              <ScaleWrapper width={1240} height={800}><HomeView /></ScaleWrapper>
-            </div>
+            <Suspense fallback={<div className="w-full aspect-[1.55] bg-surface-container-low rounded-xl animate-pulse" />}>
+              <MockupViews />
+            </Suspense>
           </div>
         </section>
 
         {/* Feature Grid Section */}
-        <section id="features" className="px-6 lg:px-xl py-24 bg-surface-container-lowest border-y border-outline-variant">
+        <section id="features" className="cv-auto px-6 lg:px-xl py-24 bg-surface-container-lowest border-y border-outline-variant">
           <div className="max-w-6xl mx-auto">
             <div className="mb-16 text-center md:text-left">
               <h2 className="font-h1 text-3xl md:text-4xl font-black text-on-background mb-sm">Features</h2>
@@ -181,7 +175,7 @@ export default function App() {
         </section>
 
         {/* Deep Dive Features */}
-        <section className="px-6 lg:px-xl py-24 bg-background">
+        <section className="cv-auto px-6 lg:px-xl py-24 bg-background">
           <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-20 items-center">
             <div className="space-y-12">
               <div className="flex gap-6 items-start group">
